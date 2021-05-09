@@ -26,13 +26,14 @@ CL_INC = # In case you need to include CL directory, do it here
 
 SRC = $(filter-out $(SOURCE)/*_gpu.c, $(wildcard $(SOURCE)/*.c))
 
-OBJ = $(patsubst $(SOURCE)/%.c, build/%.o, $(SRC)) $(BLIS_LIB)
+OBJ = $(patsubst $(SOURCE)/%.c, build/%.o, $(SRC))
 
 cblas_cpu_syrk: LDFLAGS += -DSYRK
 cblas_cpu_syrk: CFLAGS += -DSYRK
 cblas_cpu_syrk: cblas_cpu
 
 cblas_cpu: INC_DIRS += $(BLIS_INC)
+cblas_cpu: OBJ += $(BLIS_LIB)
 cblas_cpu: LDFLAGS += -DCBLAS_USE -msse4.2 -fopenmp
 cblas_cpu: CFLAGS += -DCBLAS_USE
 cblas_cpu: cpu
@@ -42,16 +43,19 @@ cblas_gpu_syrk: CFLAGS += -DSYRK
 cblas_gpu_syrk: cblas_gpu
 
 cblas_gpu: INC_DIRS += $(BLIS_INC)
+cblas_cpu: OBJ += $(BLIS_LIB)
 cblas_gpu: LDFLAGS += -DCBLAS_USE -msse4.2 -fopenmp
 cblas_gpu: CFLAGS += -DCBLAS_USE
 cblas_gpu: gpu
 
 debug_cblas_cpu: INC_DIRS += $(BLIS_INC)
+cblas_cpu: OBJ += $(BLIS_LIB)
 debug_cblas_cpu: LDFLAGS += -DCBLAS_USE -msse4.2 -fopenmp
 debug_cblas_cpu: CFLAGS += -DCBLAS_USE
 debug_cblas_cpu: debug_cpu
 
 debug_cblas_gpu: INC_DIRS += $(BLIS_INC)
+cblas_cpu: OBJ += $(BLIS_LIB)
 debug_cblas_gpu: LDFLAGS += -DCBLAS_USE -msse4.2 -fopenmp
 debug_cblas_gpu: CFLAGS += -DCBLAS_USE
 debug_cblas_gpu: debug_gpu

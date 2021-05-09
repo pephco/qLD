@@ -79,7 +79,7 @@ int sample_isValid(sample_t *sampleList, char *sample, int *valid_count, int plo
 void readHeaderFile(char* inputPathName,
         char ** headerLine1,
         char ** headerLine2,
-        char* allignmentId,
+        char* alignmentId,
         int* snipsPerFile,
         int* snipSize,
         int* totalSnips,
@@ -87,7 +87,7 @@ void readHeaderFile(char* inputPathName,
         int *posMax)
 {
     int eol=0, eof=0, status, headerFound=0, index=0;
-    char allignmentId_temp[STRINGLENGTH];
+    char alignmentId_temp[STRINGLENGTH];
     char *line=(char *)malloc(STRINGLENGTH*sizeof(char));
     strcpy(line,"\0");
     assert(line);
@@ -122,9 +122,9 @@ void readHeaderFile(char* inputPathName,
                 // Duplicate checking
                 if(headerFound == 0)
                 {
-                    // Get allignmentID from header
+                    // Get alignmentID from header
                     strcpy(headerFile,tmp_buff);
-                    sscanf(entry->d_name,"%[^'_']",allignmentId);
+                    sscanf(entry->d_name,"%[^'_']",alignmentId);
                     sprintf(headerFile,"%s%s",inputPathName,entry->d_name);
 //#ifdef VERBOSE
 //                    fprintf(threadData[0].threadLog, "Found Header file %s\n",headerFile);
@@ -168,7 +168,7 @@ found!! : %s\nNOTICE - Processing first header file\n",entry->d_name);
     headerFields[8] = "FORMAT";
 
 #ifdef VERBOSE
-    printf("allignment %s found\n",allignmentId);
+    printf("alignment %s found\n",alignmentId);
 #endif
 
     inFileType fpHeader=FOPEN(headerFile,"r");
@@ -227,13 +227,13 @@ found!! : %s\nNOTICE - Processing first header file\n",entry->d_name);
                         if(status == 1 && eol==1)
                         {
                             // Get info stored in header
-                            sscanf(line,"%s %d %d %d %d %d", allignmentId_temp,
+                            sscanf(line,"%s %d %d %d %d %d", alignmentId_temp,
                                     snipsPerFile, snipSize, totalSnips, posMin, posMax);
-                            if((strcmp(allignmentId_temp,allignmentId))!=0)
+                            if((strcmp(alignmentId_temp,alignmentId))!=0)
                             {
 #ifdef VERBOSE
                                 fprintf(stderr, "Different internal and \
-external ID: %s != %s\n", allignmentId_temp, allignmentId);
+external ID: %s != %s\n", alignmentId_temp, alignmentId);
 #endif
                                 assert(0);
                             }
@@ -292,7 +292,7 @@ void makeValidList(sample_t *sampleList,
 // Check the file names and keep the ones that have snips
 // included in the provided pos windows
 void findFiles(char *inputPathName,
-        char *allignmentId,
+        char *alignmentId,
         int snipsPerFile,
         int totalSnips,
         int posWmin,
@@ -327,8 +327,8 @@ void findFiles(char *inputPathName,
             // Ensure it is indeed a file
             if(S_ISREG(statbuf.st_mode))
             {
-                // Ensure it is the allignment and format we need
-                if(strstr(entry->d_name, allignmentId) != NULL &&
+                // Ensure it is the alignment and format we need
+                if(strstr(entry->d_name, alignmentId) != NULL &&
                    strstr(entry->d_name, "header") == NULL &&
                    (mdf?strstr(entry->d_name, ".mdf"):strstr(entry->d_name, ".vcf.gz")))
                 {

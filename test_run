@@ -52,6 +52,7 @@ then
     echo "-----------------------------------------------------------------"
     ./bin/qLD-parse-VCF -input $vcf_file \
                         -output $inp_file \
+                        -chrom 1 \
                         -size 1 
 fi
 if [[ $run = "full" || $run = "mdf" ]]

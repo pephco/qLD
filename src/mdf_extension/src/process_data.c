@@ -158,6 +158,7 @@ int writeToTable_x64(pre_t *preData,
     {
         return -1;
     }
+
     if(lineSkipped != 1)
     {
         sampleIndex=0;
@@ -449,7 +450,7 @@ void readTable_x64(pre_t *preData,
             fprintf(fpOut,"\tcompSNP_%d",k);
         for(int j=prev_val; j < tableData->tableIndex; j++)
         {
-            fprintf(fpOut,"\n%s\t%d\t%s\t%u",headerData->allignmentID,
+            fprintf(fpOut,"\n%s\t%d\t%s\t%u",headerData->alignmentID,
                                              tableData->POStable[j],
                                              tableData->IDtable[j],
                                              tableData->BCtable[j]);

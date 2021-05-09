@@ -121,6 +121,7 @@ void printHelp (FILE *fp)
     "\t-posWmin     snip pos\n"
     "\t-posWmax     snip pos\n"
     "\t-inputList   inputFile\n"
+    "\t-chrom       chromosome\n"
     "\t-toSingleOutput\n"
     "\nDescription:\n"
     "\t-input     <STRING>  Specifies the name of the input alignment file.\n"
@@ -134,6 +135,7 @@ void printHelp (FILE *fp)
     "\t-posWmin   <INT>     pos of the minimum snip to be included, must be valid\n"
     "\t-posWmax   <INT>     pos of the maximum snip to be included, must be valid\n"
     "\t-inputList <STRING>  input text file with the pos to keep\n"
+    "\t-chrom     <STRING>  Specifies the chromosome to be extracted from the original VCF\n"
     "\t-toSingleOutput      Used to generate a new VCF that is part of the input file,\n"
     "\t                     -Wmin and -Wmax mandatory with this command\n"
     "\n\n");
@@ -152,9 +154,10 @@ void commandLineParser(int argc, char** argv,
                        int *posWset, 
                        char * inList, 
                        int * inListSet,
-                       int * toSingleOutput)
+                       int * toSingleOutput,
+                       char * alignmentId)
 {
-    int i, pathSet = 0, fileSet=0, sizeSet=0;
+    int i, pathSet = 0, fileSet=0, sizeSet=0, CHset=0;
     gzFile fp;
     
     for(i=1; i<argc; ++i)
@@ -321,6 +324,16 @@ void commandLineParser(int argc, char** argv,
             continue;
         }
 
+        if(!strcmp(argv[i], "-chrom")) 
+        {
+            if (i!=argc-1)
+            {           
+                strcpy(alignmentId,argv[++i]);
+                CHset = 1;
+            }
+            continue;
+        }
+
         if(!strcmp(argv[i], "-toSingleOutput")) 
         {
         	*toSingleOutput = 1;
@@ -344,6 +357,12 @@ void commandLineParser(int argc, char** argv,
         exit(0);
     }
     
+    if (CHset==0)
+    {
+        fprintf(stderr, "\n ERROR: Please specify a chromosome with -chrom\n");
+        exit(0);
+    }
+
     if (fileSet==0)
     {
         fprintf(stderr, "\n ERROR: Please specify an alignment with -input\n");
@@ -402,7 +421,7 @@ int main(int argc, char** argv)
     char inputFileName[INFILENAMESIZE];
     char inputListName[INFILENAMESIZE];
     char outputPathName[INFILENAMESIZE];
-    char allignmentId[INFILENAMESIZE];
+    char alignmentId[INFILENAMESIZE];
     char headerFileOld[INFILENAMESIZE+30];
     // hit overflow warnings @sprintf, changed the size 
     // to mute them temporarily
@@ -429,7 +448,8 @@ int main(int argc, char** argv)
                       &posWset,
                       inputListName,
                       &inListSet, 
-                      &toSingleOutput);
+                      &toSingleOutput,
+                      alignmentId);
 
     char **line = (char**)malloc(sizeof(char*));
     *line = (char*)malloc(sizeof(char)*STRINGLENGTH);
@@ -520,7 +540,7 @@ posWmax\n");
                                       lines,
                                       size, 
                                       &snipSize, 
-                                      allignmentId, 
+                                      alignmentId, 
                                       &maxcount,
                                       &counter, 
                                       &posMin, 
@@ -539,7 +559,7 @@ posWmax\n");
                                     lines,
                                     size, 
                                     &snipSize, 
-                                    allignmentId, 
+                                    alignmentId, 
                                     &maxcount, //-Wint-conversion MPAMPIS
                                     &counter, 
                                     &posMin, 
@@ -557,7 +577,7 @@ posWmax\n");
                                     lines,
                                     size, 
                                     &snipSize, 
-                                    allignmentId, 
+                                    alignmentId, 
                                     &maxcount,
                                     &counter, 
                                     &posMin, 
@@ -583,7 +603,7 @@ posWmax\n");
                                 lines,
                                 size, 
                                 &snipSize, 
-                                allignmentId, 
+                                alignmentId, 
                                 &maxcount,
                                 &counter, 
                                 &posMin, 
@@ -597,12 +617,12 @@ posWmax\n");
 
 	    if(maxcount <0 || maxcount>counter)
 	    	maxcount = counter;
-	    gzprintf(fpHeader,"%s %d %d %d %d %d\n",allignmentId, maxcount, snipSize, 
+	    gzprintf(fpHeader,"%s %d %d %d %d %d\n",alignmentId, maxcount, snipSize, 
                                                 counter, posMin, posMax);
-	    printf("%s %d %d %d %d %d\n",allignmentId, maxcount, snipSize, counter, posMin, 
+	    printf("%s %d %d %d %d %d\n",alignmentId, maxcount, snipSize, counter, posMin, 
                                      posMax);
 	    gzclose(fpHeader);
-	    sprintf(headerFileNew,"%s%s_header.vcf.gz",outputPathName,allignmentId);
+	    sprintf(headerFileNew,"%s%s_header.vcf.gz",outputPathName,alignmentId);
 
 	    sprintf(headerFileOld,"%sheader.vcf.gz",outputPathName);
 		printf("Renaming %s to %s\n",headerFileOld, headerFileNew);

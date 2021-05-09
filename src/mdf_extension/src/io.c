@@ -60,8 +60,8 @@ header_t *init_header_struct(void)
     header_t *headerData=(header_t *)malloc(sizeof(header_t));
     assert(headerData);
 
-    headerData->allignmentID=(char *)malloc(IDLENGTH*sizeof(char));
-    assert(headerData->allignmentID);
+    headerData->alignmentID=(char *)malloc(IDLENGTH*sizeof(char));
+    assert(headerData->alignmentID);
     headerData->headerLine1=(char *)malloc(STRINGLENGTH*sizeof(char));
     assert(headerData->headerLine1);
     headerData->headerLine2=(char *)malloc(STRINGLENGTH*sizeof(char));
@@ -85,7 +85,7 @@ void print_header_struct(header_t *headerData)
     printf("ID: %s\n"
            "snipsPerFile: %d\n"
            "snipSize: %d\n"
-           "totalSnips: %d\n",headerData->allignmentID,
+           "totalSnips: %d\n",headerData->alignmentID,
                               headerData->snipsPerFile,
                               headerData->snipSize,
                               headerData->totalSnips);
@@ -98,7 +98,7 @@ void print_header_struct(header_t *headerData)
 
 void free_header_struct(header_t *headerData)
 {
-    free(headerData->allignmentID);
+    free(headerData->alignmentID);
     free(headerData->headerLine1);
     free(headerData->headerLine2);
     free(headerData->valid_mask);
@@ -165,7 +165,7 @@ int sample_isValid(char **list, int list_size, char *sample, int ploidy, int *va
 void readHeaderFile(pre_t *preData, header_t *headerData)
 {
     int eol=0, eof=0, status, headerFound=0, index, validList_index=0;
-    char allignmentId_temp[STRINGLENGTH];
+    char alignmentId_temp[STRINGLENGTH];
     char *line=(char *)malloc(STRINGLENGTH*sizeof(char));
     strcpy(line,"\0");
     assert(line);
@@ -198,7 +198,7 @@ void readHeaderFile(pre_t *preData, header_t *headerData)
                 if(headerFound == 0)
                 {
                     strcpy(headerFile,tmp_buff);
-                    sscanf(entry->d_name,"%[^'_']",headerData->allignmentID);
+                    sscanf(entry->d_name,"%[^'_']",headerData->alignmentID);
                     sprintf(headerFile,"%s%s",preData->input,entry->d_name);
 //#ifdef VERBOSE
 //                    fprintf(threadData[0].threadLog, "Found Header file %s\n",headerFile);
@@ -241,7 +241,7 @@ found!! : %s\nNOTICE - Processing first header file\n",entry->d_name);
     headerFields[8] = "FORMAT";
 
 #ifdef VERBOSE
-    printf("allignment %s found\n",headerData->allignmentID);
+    printf("alignment %s found\n",headerData->alignmentID);
 #endif
 
     inFileType fpHeader=FOPEN(headerFile,"r");
@@ -311,15 +311,15 @@ found!! : %s\nNOTICE - Processing first header file\n",entry->d_name);
                         status=getNextLine(fpHeader, &line, &eol, &eof, &lineLength);
                         if(status == 1 && eol==1)
                         {
-                            sscanf(line,"%s %d %d %d", allignmentId_temp,
+                            sscanf(line,"%s %d %d %d", alignmentId_temp,
                                                        &(headerData->snipsPerFile),
                                                        &(headerData->snipSize),
                                                        &(headerData->totalSnips));
-                            if((strcmp(allignmentId_temp,headerData->allignmentID))!=0)
+                            if((strcmp(alignmentId_temp,headerData->alignmentID))!=0)
                             {
 #ifdef VERBOSE
                                 fprintf(stderr, "Different internal and \
-external ID: %s != %s\n", allignmentId_temp, headerData->allignmentID);
+external ID: %s != %s\n", alignmentId_temp, headerData->alignmentID);
 #endif
                                 assert(0);
                             }
@@ -369,12 +369,12 @@ void findFiles(pre_t *preData, header_t *headerData)
         stat(file_found,&statbuf);
         if(S_ISREG(statbuf.st_mode))
         {
-            if(strstr(entry->d_name, headerData->allignmentID) != NULL &&
+            if(strstr(entry->d_name, headerData->alignmentID) != NULL &&
                strstr(entry->d_name, "header") == NULL &&
                strstr(entry->d_name, ".vcf.gz") != NULL)
             {
                 sscanf(entry->d_name,"%[^_]",tmpId);
-                if(!strcmp(tmpId,headerData->allignmentID))
+                if(!strcmp(tmpId,headerData->alignmentID))
                 {
                         headerData->filesListNum++;
                         headerData->filesList=(char**)realloc_buff((void *)headerData->filesList,

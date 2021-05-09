@@ -81,7 +81,7 @@ int createPart(gzFile fpIn,
         int lines,
         int size,
         int* snipSize,
-        char* allignmentId,
+        char* alignmentId,
         int * maxcount,
         int *counter,
         int *posMin,
@@ -101,12 +101,14 @@ int createPart(gzFile fpIn,
         printDelay=0;
 
     gzFile fpOut;
+    char * allID = (char*)malloc(256*sizeof(char));
     status =  getNextLine(fpIn, line, &eol, &eof, lineLength);
     if(status == 1 && eol==1)
     {
         status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
         assert(status);
-        strcpy(allignmentId,*word);
+        //strcpy(alignmentId,*word);
+        strcpy(allID,*word);
         status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
         assert(status);
         pos = atoi(*word);
@@ -140,12 +142,13 @@ int createPart(gzFile fpIn,
                 lines,(*snipSize),(*maxcount));
 
         (*counter)++;
-        sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,allignmentId,1,
+        sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,alignmentId,1,
                 (*maxcount),pos);
         startingValue = 1;
         endingValue = (*maxcount);
-        firstPos = pos;
-        (*posMin) = pos;
+        //firstPos = pos;
+        //(*posMin) = pos;
+        //(*posMax) = pos;
 
         printf(" %d%% -- Creating File: %s\n", ((*counter)*100)/lines,outputFile);
 
@@ -153,29 +156,31 @@ int createPart(gzFile fpIn,
         if(fpOut == NULL)
         {
             fprintf(stderr,"\n ERROR: failed to open file %s", outputFile);
+            free(allID);
             return 0;
         }
         writeLine(fpOut,headerLine1);
         writeLine(fpOut,headerLine2);
-        writeLine(fpOut,line);
+        if(!strcmp(alignmentId,allID))
+            writeLine(fpOut,line);
         newFile = 0;
 
         if( lineCounter >= lines)
         {
-            (*posMax) = pos;
             gzclose(fpOut);
 
             char outputFileNew[INFILENAMESIZE+30];
             printf("\033[A\33[2K");
             printf("100%% -- Creating File: %s\n",outputFile);
-            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,allignmentId,
+            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,alignmentId,
                     startingValue,(*counter),
-                    firstPos,pos);
+                    firstPos,(*posMax));
             printf("100%% -- Renaming %s to %s\n",outputFile,outputFileNew);
             int ret = rename(outputFile, outputFileNew);
             if(ret != 0)
             {
                 fprintf(stderr,"\n ERROR: unable to rename the file\n");
+                free(allID);
                 return 0;
             }
         }
@@ -183,6 +188,7 @@ int createPart(gzFile fpIn,
     else
     {
         fprintf(stderr,"\n ERROR: no snips found\n");
+        free(allID);
         return 0;
     }
 
@@ -196,17 +202,18 @@ int createPart(gzFile fpIn,
             {
                 status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
                 assert(status);
-                char * allID = (char*)malloc(strlen(*word)*sizeof(char));
+                //char * allID = (char*)malloc(strlen(*word)*sizeof(char));
                 strcpy(allID,*word);
                 status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
                 assert(status);
                 pos = atoi(*word);
                 lineCounter++;
-                if(!strcmp(allID,allignmentId))
+                if(!strcmp(allID,alignmentId))
                 {
                     (*counter)++;
+                    (*posMax)=pos;
                     sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,
-                            allignmentId,(*counter),
+                            alignmentId,(*counter),
                             (*counter)+(*maxcount)-1,
                             pos);
                     startingValue = (*counter);
@@ -224,6 +231,7 @@ int createPart(gzFile fpIn,
                     if(fpOut == NULL)
                     {
                         fprintf(stderr,"\n ERROR: failed to open file %s", outputFile);
+                        free(allID);
                         return 0;
                     }
                     writeLine(fpOut,headerLine1);
@@ -233,34 +241,35 @@ int createPart(gzFile fpIn,
 
                     if(lineCounter >= lines)
                     {
-                        (*posMax) = pos;
                         gzclose(fpOut);
 
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("\033[A\33[2K");
                         printf("100%% -- Creating File: %s\n",outputFile);
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
-                                firstPos,pos);
+                                (*posMin),(*posMax));
                         printf("100%% -- Renaming %s to %s\n",outputFile,outputFileNew);
                         int ret = rename(outputFile, outputFileNew);
                         if(ret != 0)
                         {
                             fprintf(stderr,"\n ERROR: unable to rename the file\n");
+                            free(allID);
                             return 0;
                         }
                     }
                 }
                 else
-                    fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                            skipped\n",lineCounter,allID);
+                //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+                //            "skipped\n",lineCounter,allID);
                 free(allID);
             }
             else if(eof ==1)
             {
                 printf("%d Snips written\n",(*counter));
+                free(allID);
                 return 1;
             }
         }
@@ -271,7 +280,7 @@ int createPart(gzFile fpIn,
             {
                 status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
                 assert(status);
-                char * allID = (char*)malloc(strlen(*word)*sizeof(char));
+                //char * allID = (char*)malloc(strlen(*word)*sizeof(char));
                 strcpy(allID,*word);
                 status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
                 assert(status);
@@ -286,33 +295,36 @@ int createPart(gzFile fpIn,
                             outputFile);
                     printDelay = ((*counter)*100/lines);
                 }
-
-                if(!strcmp(allID,allignmentId))
-                {
+                
+                if(!strcmp(allID,alignmentId))
+                {     
                     writeLine(fpOut,line);
                     (*counter)++;
-
+                    (*posMax)=pos;
+                    if((*posMin) == 0)
+                        (*posMin) = pos;
                     if(lineCounter >= lines)
                     {
-                        (*posMax) = pos;
                         gzclose(fpOut);
 
                         printf("\033[A\33[2K");
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("100%% -- Creating File: %s\n",outputFile);
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
-                                firstPos,pos);
+                                (*posMin),(*posMax));
                         printf("100%% -- Renaming %s to %s\n",outputFile,outputFileNew);
                         int ret = rename(outputFile, outputFileNew);
                         if(ret != 0)
                         {
                             fprintf(stderr,"\n ERROR: unable to rename the file\n");
+                            free(allID);
                             return 0;
                         }
                         printf("%d Snips written\n",(*counter));
+                        free(allID);
                         return 1;
                     }
                     else if((*counter) == endingValue)
@@ -323,24 +335,24 @@ int createPart(gzFile fpIn,
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("\033[A\33[2K");
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
-                                firstPos,pos);
+                                (*posMin),(*posMax));
                         printf(" %d%% -- Renaming %s to %s\n",((*counter)*100)/lines,
                                 outputFile,outputFileNew);
                         int ret = rename(outputFile, outputFileNew);
                         if(ret != 0)
                         {
                             fprintf(stderr,"\n ERROR: unable to rename the file\n");
+                            free(allID);
                             return 0;
                         }
                     }
                 }
-                else
-                    fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                            skipped\n",lineCounter,allID);
-                free(allID);
+                //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+                //            "skipped\n",lineCounter,allID);
+                //free(allID);
             }
             else if(eof ==1)
             {
@@ -349,22 +361,25 @@ int createPart(gzFile fpIn,
                 char outputFileNew[INFILENAMESIZE+30];
                 printf("100%% -- Creating File: %s\n",outputFile);
                 sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                        allignmentId,
+                        alignmentId,
                         startingValue,
-                        (*counter),firstPos,pos);
+                        (*counter),(*posMin),(*posMax));
                 printf("100%% -- Renaming %s to %s\n",outputFile,outputFileNew);
                 int ret = rename(outputFile, outputFileNew);
                 if(ret != 0)
                 {
                     fprintf(stderr,"\n ERROR: unable to rename the file\n");
+                    free(allID);
                     return 0;
                 }
                 printf("%d Snips written\n",(*counter));
+                free(allID);
                 return 1;
             }
         }
     }
     printf("%d Snips written\n",(*counter));
+    free(allID);
     return 1;
 }
 
@@ -379,7 +394,7 @@ int createPartIndexW(gzFile fpIn,
         int lines,
         int size,
         int* snipSize,
-        char* allignmentId,
+        char* alignmentId,
         int * maxcount,
         int *counter,
         int *posMin,
@@ -407,7 +422,7 @@ int createPartIndexW(gzFile fpIn,
     {
         status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
         assert(status);
-        strcpy(allignmentId,*word);
+        //strcpy(alignmentId,*word);
         status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
         assert(status);
         pos = atoi(*word);
@@ -443,7 +458,7 @@ int createPartIndexW(gzFile fpIn,
         if(lineCounter >= Wmin)
         {
             (*counter)++;
-            sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,allignmentId,1,
+            sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,alignmentId,1,
                     (*maxcount),pos);
             startingValue = 1;
             endingValue = (*maxcount);
@@ -472,7 +487,7 @@ int createPartIndexW(gzFile fpIn,
                 printf("\033[A\33[2K");
                 printf("Creating File: %s, 100%%\n",outputFile);
                 sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                        allignmentId,
+                        alignmentId,
                         startingValue,(*counter),
                         firstPos,pos);
                 printf("Renaming %s to %s\n",outputFile,outputFileNew);
@@ -513,13 +528,13 @@ int createPartIndexW(gzFile fpIn,
                 assert(status);
                 pos = atoi(*word);
                 lineCounter++;
-                if(!strcmp(allID,allignmentId))
+                if(!strcmp(allID,alignmentId))
                 {
                     if(lineCounter >= Wmin)
                     {
                         (*counter)++;
                         sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 (*counter),
                                 (*counter)+(*maxcount)-1,
                                 pos);
@@ -564,7 +579,7 @@ int createPartIndexW(gzFile fpIn,
                         printf("\033[A\33[2K");
                         printf("Creating File: %s, 100%%\n",outputFile);
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
                                 firstPos,pos);
@@ -580,8 +595,8 @@ int createPartIndexW(gzFile fpIn,
                     }
                 }
                 else
-                    fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                            skipped\n",lineCounter,allID);
+                //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+                //            "skipped\n",lineCounter,allID);
                 free(allID);
             }else if(eof ==1)
             {
@@ -610,7 +625,7 @@ int createPartIndexW(gzFile fpIn,
                     printDelay = (((*counter)*100)/(Wmax-Wmin+1));
                 }
 
-                if(!strcmp(allID,allignmentId))
+                if(!strcmp(allID,alignmentId))
                 {
                     writeLine(fpOut,line);
                     (*counter)++;
@@ -631,7 +646,7 @@ int createPartIndexW(gzFile fpIn,
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("Creating File: %s, 100%%\n",outputFile);
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
                                 firstPos,pos);
@@ -653,7 +668,7 @@ int createPartIndexW(gzFile fpIn,
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("\033[A\33[2K");
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
                                 firstPos,pos);
@@ -667,8 +682,8 @@ int createPartIndexW(gzFile fpIn,
                     }
                 }
                 else
-                    fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                            skipped\n",lineCounter,allID);
+                //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+                //            "skipped\n",lineCounter,allID);
                 free(allID);
             }
             else if(eof ==1)
@@ -683,7 +698,7 @@ int createPartIndexW(gzFile fpIn,
                 char outputFileNew[INFILENAMESIZE+30];
                 printf("Creating File: %s, 100%%\n",outputFile);
                 sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                        allignmentId,
+                        alignmentId,
                         startingValue,(*counter),
                         firstPos,pos);
                 printf("Renaming %s to %s\n",outputFile,outputFileNew);
@@ -713,7 +728,7 @@ int createPartPosW(gzFile fpIn,
         int lines,
         int size,
         int* snipSize,
-        char* allignmentId,
+        char* alignmentId,
         int * maxcount,
         int *counter,
         int *posMin,
@@ -740,7 +755,7 @@ int createPartPosW(gzFile fpIn,
     {
         status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
         assert(status);
-        strcpy(allignmentId,*word);
+        //strcpy(alignmentId,*word);
         status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
         assert(status);
         pos = atoi(*word);
@@ -776,7 +791,7 @@ int createPartPosW(gzFile fpIn,
         if(pos >= posWmin)
         {
             (*counter)++;
-            sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,allignmentId,1,
+            sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,alignmentId,1,
                     (*maxcount),pos);
             startingValue = 1;
             endingValue = (*maxcount);
@@ -811,7 +826,7 @@ int createPartPosW(gzFile fpIn,
             }
 
             char outputFileNew[INFILENAMESIZE+30];
-            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,allignmentId,
+            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,alignmentId,
                     startingValue,(*counter),
                     firstPos,pos);
             printf("Renaming %s to %s\n",outputFile,outputFileNew);
@@ -845,13 +860,13 @@ int createPartPosW(gzFile fpIn,
                 assert(status);
                 pos = atoi(*word);
                 lineCounter++;
-                if(!strcmp(allID,allignmentId))
+                if(!strcmp(allID,alignmentId))
                 {
                     if(pos >= posWmin)
                     {
                         (*counter)++;
                         sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 (*counter),
                                 (*counter)+(*maxcount)-1,
                                 pos);
@@ -893,7 +908,7 @@ int createPartPosW(gzFile fpIn,
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("\033[A\33[2K");
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
                                 firstPos,pos);
@@ -909,8 +924,8 @@ int createPartPosW(gzFile fpIn,
                     }
                 }
                 else
-                    fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                            skipped\n",lineCounter,allID);
+                //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+                //            "skipped\n",lineCounter,allID);
                 free(allID);
             }else if(eof ==1)
             {
@@ -932,7 +947,7 @@ int createPartPosW(gzFile fpIn,
                 pos = atoi(*word);
                 lineCounter++;
 
-                if(!strcmp(allID,allignmentId))
+                if(!strcmp(allID,alignmentId))
                 {
                     writeLine(fpOut,line);
                     (*counter)++;
@@ -950,7 +965,7 @@ int createPartPosW(gzFile fpIn,
 
                         char outputFileNew[INFILENAMESIZE+30];
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,startingValue,(*counter),firstPos,pos);
+                                alignmentId,startingValue,(*counter),firstPos,pos);
                         printf("Renaming %s to %s\n",outputFile,outputFileNew);
                         int ret = rename(outputFile, outputFileNew);
                         if(ret != 0)
@@ -969,7 +984,7 @@ int createPartPosW(gzFile fpIn,
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("\033[A\33[2K");
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
                                 firstPos,pos);
@@ -983,8 +998,8 @@ int createPartPosW(gzFile fpIn,
                     }
                 }
                 else
-                    fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                            skipped\n",lineCounter,allID);
+                //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+                //            "skipped\n",lineCounter,allID);
                 free(allID);
             }
             else if(eof ==1)
@@ -998,7 +1013,7 @@ int createPartPosW(gzFile fpIn,
                 }
                 char outputFileNew[INFILENAMESIZE+30];
                 sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                        allignmentId,
+                        alignmentId,
                         startingValue,(*counter),
                         firstPos,pos);
                 printf("Renaming %s to %s\n",outputFile,outputFileNew);
@@ -1026,7 +1041,7 @@ int createPartPosL(gzFile fpIn,
         int lines,
         int size,
         int* snipSize,
-        char* allignmentId,
+        char* alignmentId,
         int * maxcount,
         int *counter,
         int *posMin,
@@ -1055,7 +1070,7 @@ int createPartPosL(gzFile fpIn,
     {
         status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
         assert(status);
-        strcpy(allignmentId,*word);
+        //strcpy(alignmentId,*word);
         status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
         assert(status);
         pos = atoi(*word);
@@ -1091,7 +1106,7 @@ int createPartPosL(gzFile fpIn,
         if(pos == (*inList)[inListPos])
         {
             (*counter)++;
-            sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,allignmentId,1,
+            sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,alignmentId,1,
                     (*maxcount),pos);
             startingValue = 1;
             endingValue = (*maxcount);
@@ -1136,7 +1151,7 @@ int createPartPosL(gzFile fpIn,
             char outputFileNew[INFILENAMESIZE+30];
             printf("\033[A\33[2K");
             printf("Creating File: %s, 100%%\n",outputFile);
-            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,allignmentId,
+            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,alignmentId,
                     startingValue,(*counter),
                     firstPos,pos);
             printf("Renaming %s to %s\n",outputFile,outputFileNew);
@@ -1173,13 +1188,13 @@ int createPartPosL(gzFile fpIn,
                 assert(status);
                 pos = atoi(*word);
                 lineCounter++;
-                if(!strcmp(allID,allignmentId))
+                if(!strcmp(allID,alignmentId))
                 {
                     if(pos == (*inList)[inListPos])
                     {
                         (*counter)++;
                         sprintf(outputFile,"%s%s_%d_%d_%d_.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 (*counter),
                                 (*counter)+(*maxcount)-1,
                                 pos);
@@ -1233,7 +1248,7 @@ int createPartPosL(gzFile fpIn,
                         printf("\033[A\33[2K");
                         printf("Creating File: %s, 100%%\n",outputFile);
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
                                 firstPos,pos);
@@ -1249,8 +1264,8 @@ int createPartPosL(gzFile fpIn,
                     }
                 }
                 else
-                    fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                            skipped\n",lineCounter,allID);
+                //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+                //            "skipped\n",lineCounter,allID);
                 free(allID);
             }else if(eof ==1)
             {
@@ -1281,7 +1296,7 @@ int createPartPosL(gzFile fpIn,
                     printDelay = (((*counter)*100)/listSize);
                 }
 
-                if(!strcmp(allID,allignmentId))
+                if(!strcmp(allID,alignmentId))
                 {
                     if (pos == (*inList)[inListPos])
                     {
@@ -1306,7 +1321,7 @@ int createPartPosL(gzFile fpIn,
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("Creating File: %s, 100%%\n",outputFile);
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
                                 firstPos,pos);
@@ -1328,7 +1343,7 @@ int createPartPosL(gzFile fpIn,
                         char outputFileNew[INFILENAMESIZE+30];
                         printf("\033[A\33[2K");
                         sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                                allignmentId,
+                                alignmentId,
                                 startingValue,
                                 (*counter),
                                 firstPos,pos);
@@ -1342,8 +1357,8 @@ int createPartPosL(gzFile fpIn,
                     }
                 }
                 else
-                    fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                            skipped\n",lineCounter,allID);
+                //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+                //            "skipped\n",lineCounter,allID);
                 free(allID);
             }
             else if(eof ==1)
@@ -1357,7 +1372,7 @@ int createPartPosL(gzFile fpIn,
                 }
                 char outputFileNew[INFILENAMESIZE+30];
                 sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                        allignmentId,
+                        alignmentId,
                         startingValue,
                         (*counter),firstPos,pos);
                 printf("Renaming %s to %s\n",outputFile,outputFileNew);
@@ -1398,7 +1413,7 @@ int createSingleFileIndexW(gzFile fpIn,
         firstPos=0,
         firstIndex=0;
 
-    char allignmentId[INFILENAMESIZE];
+    char alignmentId[INFILENAMESIZE];
     char outputFile[INFILENAMESIZE+30];
     gzFile fpOut;
 
@@ -1441,7 +1456,7 @@ int createSingleFileIndexW(gzFile fpIn,
     {
         status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
         assert(status);
-        strcpy(allignmentId,*word);
+        //strcpy(alignmentId,*word);
         status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
         assert(status);
         pos = atoi(*word);
@@ -1497,7 +1512,7 @@ int createSingleFileIndexW(gzFile fpIn,
             char outputFile[INFILENAMESIZE+30];
             printf("\033[A\33[2K");
             printf("Processing: 100%%\n");
-            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,allignmentId,
+            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,alignmentId,
                     firstIndex,
                     firstIndex+(*counter)-1,
                     firstPos,pos);
@@ -1542,7 +1557,7 @@ int createSingleFileIndexW(gzFile fpIn,
                 printDelay = (((*counter)*100)/(Wmax-Wmin+1));
             }
 
-            if(!strcmp(allID,allignmentId))
+            if(!strcmp(allID,alignmentId))
             {
                 if(lineCounter >= Wmin)
                 {
@@ -1568,7 +1583,7 @@ int createSingleFileIndexW(gzFile fpIn,
                     printf("\033[A\33[2K");
                     printf("Processing: 100%%\n");
                     sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                            allignmentId,
+                            alignmentId,
                             firstIndex,
                             firstIndex+(*counter)-1,
                             firstPos,pos);
@@ -1585,8 +1600,8 @@ int createSingleFileIndexW(gzFile fpIn,
                 }
             }
             else
-                fprintf(stderr,"WARNING: snip %d is allignment %s and will be \
-                        skipped\n",lineCounter,allID);
+            //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be "
+            //            "skipped\n",lineCounter,allID);
             free(allID);
         }
         else if(eof ==1)
@@ -1601,7 +1616,7 @@ int createSingleFileIndexW(gzFile fpIn,
             char outputFile[INFILENAMESIZE+30];
             printf("\033[A\33[2K");
             printf("Processing: 100%%\n");
-            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,allignmentId,
+            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,alignmentId,
                     firstIndex,
                     firstIndex+(*counter)-1,
                     firstPos,pos);
@@ -1643,7 +1658,7 @@ int createSingleFilePosW(gzFile fpIn,
         firstIndex=0,
         i;
 
-    char allignmentId[INFILENAMESIZE];
+    char alignmentId[INFILENAMESIZE];
     char outputFile[INFILENAMESIZE+30];
     gzFile fpOut;
 
@@ -1686,7 +1701,7 @@ int createSingleFilePosW(gzFile fpIn,
     {
         status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
         assert(status);
-        strcpy(allignmentId,*word);
+        //strcpy(alignmentId,*word);
         status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
         assert(status);
         pos = atoi(*word);
@@ -1746,7 +1761,7 @@ int createSingleFilePosW(gzFile fpIn,
             char outputFile[INFILENAMESIZE+30];
             printf("\033[A\33[2K");
             printf("Processing: 100%%\n");
-            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,allignmentId,
+            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,alignmentId,
                     firstIndex,
                     firstIndex+(*counter)-1,
                     firstPos,pos);
@@ -1795,7 +1810,7 @@ int createSingleFilePosW(gzFile fpIn,
                 printDelay = (((*counter)*100)/lines);
             }
 
-            if(!strcmp(allID,allignmentId))
+            if(!strcmp(allID,alignmentId))
             {
                 if(pos >= posWmin)
                 {
@@ -1823,7 +1838,7 @@ int createSingleFilePosW(gzFile fpIn,
                     printf("\033[A\33[2K");
                     printf("Processing: 100%%\n");
                     sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,
-                            allignmentId,
+                            alignmentId,
                             firstIndex,
                             firstIndex+(*counter)-1,
                             firstPos,pos);
@@ -1839,8 +1854,8 @@ int createSingleFilePosW(gzFile fpIn,
                 }
             }
             else
-                fprintf(stderr,"WARNING: snip %d is allignment %s and will be skipped\n",
-                        lineCounter,allID);
+            //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be skipped\n",
+            //            lineCounter,allID);
             free(allID);
         }
         else if(eof ==1)
@@ -1857,7 +1872,7 @@ int createSingleFilePosW(gzFile fpIn,
             char outputFile[INFILENAMESIZE+30];
             printf("\033[A\33[2K");
             printf("Processing: 100%%\n");
-            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,allignmentId,
+            sprintf(outputFileNew,"%s%s_%d_%d_%d_%d.vcf.gz",outputPathName,alignmentId,
                     firstIndex,
                     firstIndex+(*counter)-1,
                     firstPos,pos);
@@ -1897,7 +1912,7 @@ int createSingleFilePosL(gzFile fpIn,
         firstPos=0,
         inListPos=0;
 
-    char allignmentId[INFILENAMESIZE];
+    char alignmentId[INFILENAMESIZE];
     char outputFile[INFILENAMESIZE+30];
     gzFile fpOut;
 
@@ -1940,7 +1955,7 @@ int createSingleFilePosL(gzFile fpIn,
     {
         status = getWordFromString(*line,word, &eol, wordLength, &index);//chrom
         assert(status);
-        strcpy(allignmentId,*word);
+        //strcpy(alignmentId,*word);
         status = getWordFromString(*line,word, &eol, wordLength, &index);//pos
         assert(status);
         pos = atoi(*word);
@@ -2026,7 +2041,7 @@ int createSingleFilePosL(gzFile fpIn,
                 printDelay = (((*counter)*100)/listSize);
             }
 
-            if(!strcmp(allID,allignmentId))
+            if(!strcmp(allID,alignmentId))
             {
                 if(pos == (*inList)[inListPos])
                 {
@@ -2055,8 +2070,8 @@ int createSingleFilePosL(gzFile fpIn,
                 }
             }
             else
-                fprintf(stderr,"WARNING: snip %d is allignment %s and will be skipped\n",
-                        lineCounter,allID);
+            //    fprintf(stderr,"WARNING: snip %d is alignment %s and will be skipped\n",
+            //            lineCounter,allID);
             free(allID);
         }
         else if(eof ==1)

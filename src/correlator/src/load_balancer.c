@@ -138,8 +138,8 @@ void preprocess_data(FILE *fpInRep,
     int totalSnips=0, totalSnips2=0, snipsPerFile=0;
     int snipsPerFile2=0, posMin=0, posMax=0, posMin2=0, posMax2=0;
 
-    char allignmentId[INFILENAMESIZE];
-    char allignmentId2[INFILENAMESIZE];
+    char alignmentId[INFILENAMESIZE];
+    char alignmentId2[INFILENAMESIZE];
 
     int filesListNum=0, filesListNum2=0;
     int snipSize=0, snipSize2=0;
@@ -166,7 +166,7 @@ void preprocess_data(FILE *fpInRep,
     readHeaderFile(inputPathName,
             &headerLine1,
             &headerLine2,
-            allignmentId,
+            alignmentId,
             &snipsPerFile,
             &snipSize,
             &totalSnips,
@@ -177,7 +177,7 @@ void preprocess_data(FILE *fpInRep,
         readHeaderFile(inputPath2Name,
                 &headerLine1_2,
                 &headerLine2_2,
-                allignmentId2,
+                alignmentId2,
                 &snipsPerFile2,
                 &snipSize2,
                 &totalSnips2,
@@ -195,7 +195,7 @@ void preprocess_data(FILE *fpInRep,
         readHeaderFile(inputPathName,
                 &headerLine1_2,
                 &headerLine2_2,
-                allignmentId2,
+                alignmentId2,
                 &snipsPerFile2,
                 &snipSize2,
                 &totalSnips2,
@@ -282,7 +282,7 @@ void preprocess_data(FILE *fpInRep,
     //with the given window(s) or input list we find the files we need to
     //open to read the snips we need
     findFiles(inputPathName,
-              allignmentId,
+              alignmentId,
               snipsPerFile,
               totalSnips,
               posWmin1,
@@ -294,7 +294,7 @@ void preprocess_data(FILE *fpInRep,
     if(inPath2set == 1)
     {
         findFiles(inputPath2Name,
-                  allignmentId2,
+                  alignmentId2,
                   snipsPerFile2,
                   totalSnips2,
                   posWmin2,
@@ -306,7 +306,7 @@ void preprocess_data(FILE *fpInRep,
     else
     {
         findFiles(inputPathName,
-                  allignmentId2,
+                  alignmentId2,
                   snipsPerFile2,
                   totalSnips2,
                   posWmin2,

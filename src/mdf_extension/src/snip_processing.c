@@ -401,7 +401,7 @@ void processSampleVCF(helper_t *helperData,
                       int statesALT)
 {
     int dataSize=getGTfield(helperData->word,GTpos);
-
+    
     if(dataSize > helperData->ploidy)
     {
         fprintf(stderr,"ERROR: Detected data bigger than the ploidy of input\n");

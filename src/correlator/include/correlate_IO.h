@@ -31,7 +31,7 @@ int sample_isValid(sample_t *sampleList, char *sample, int *valid_count, int plo
 void readHeaderFile(char* inputPathName,
                     char ** headerLine1,
                     char ** headerLine2,
-                    char* allignmentId,
+                    char* alignmentId,
                     int* snipsPerFile,
                     int* snipSize,
                     int* totalSnips,
@@ -43,7 +43,7 @@ void makeValidList(sample_t *sampleList,
                    valid_t *validData);
 
 void findFiles(char* inputPathName,
-        char* allignmentId,
+        char* alignmentId,
         int snipsPerFile,
         int totalSnips,
         int posWmin,

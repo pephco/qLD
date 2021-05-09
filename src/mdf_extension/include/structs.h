@@ -32,7 +32,7 @@ typedef struct preprocess_t
 
 typedef struct header_t
 {
-    char *allignmentID;
+    char *alignmentID;
     char *headerLine1;
     char *headerLine2;
     int *valid_mask;
