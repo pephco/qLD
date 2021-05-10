@@ -5,13 +5,13 @@ quickLD (qLD) is a tool to calculate Linkage disequilibrium (the non-random asso
 
 ## Getting Started
 
-quickLD is developed and tested in Linux distributions and should only work in Linux environments. The instructions bellow will get you a copy of the project up and running on your local machine for development and testing purposes. See References for further information in the paper behind this software.
+quickLD is developed and tested in Linux machines. Cross-platform compatibility should be expected in future releases, but it currently only supports Linux. The instructions bellow will get you a copy of the project up and running on your local machine for development and testing purposes. See References for further information in the paper behind this software.
 
 ### Clone the repository and get into the main directory
 
 ```
-git clone git@github.com:pephco/qLD.git
-cd qLD
+git clone git@github.com:pephco/quickLD.git
+cd quickLD
 ```
 
 ### TL;WR
@@ -373,6 +373,10 @@ imputation method on a per-site basis.
 ## Authors
 
 * **[C. Theodoris](https://github.com/StrayLamb2)**
+
+## References
+
+* [qLD: High-performance Computation of Linkage Disequilibrium on CPU and GPU](https://ieeexplore.ieee.org/document/9288130)
 
 ## License
 
