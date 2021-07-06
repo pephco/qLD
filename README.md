@@ -373,6 +373,7 @@ imputation method on a per-site basis.
 ## Authors
 
 * **[C. Theodoris](https://github.com/StrayLamb2)**
+* **[N. Alachiotis](https://github.com/alachins)**
 
 ## References
 
