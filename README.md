@@ -1,11 +1,19 @@
 # quickLD v0.2.3: High-performance Computation of Linkage Disequilibrium on CPUs and GPUs
 
 
-quickLD (qLD) is a tool to calculate Linkage disequilibrium (the non-random association between alleles at different loci), with highly efficient CPU and GPU kernels that utilize dense linear algebra (DLA) operations.
+quickLD (qLD) is a tool to calculate Linkage disequilibrium (the non-random association between alleles at different loci), with highly efficient CPU and GPU kernels that utilize dense linear algebra (DLA) operations. Further information behind this software can be found in the related publications below.
+
+## The main article behind quickLD:
+
+* [qLD: High-performance Computation of Linkage Disequilibrium on CPU and GPU](https://ieeexplore.ieee.org/document/9288130)
+
+Other related publications:
+
+* [quickLD: An efficient software for linkage disequilibrium analyses](https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13438)
 
 ## Getting Started
 
-quickLD is developed and tested in Linux machines. Cross-platform compatibility should be expected in future releases, but it currently only supports Linux. The instructions bellow will get you a copy of the project up and running on your local machine for development and testing purposes. See References for further information in the paper behind this software.
+quickLD is developed and tested in Linux machines. Cross-platform compatibility should be expected in future releases, but it currently only supports Linux. The instructions bellow will get you a copy of the project up and running on your local machine for development and testing purposes. 
 
 ### Clone the repository and get into the main directory
 
@@ -374,10 +382,6 @@ imputation method on a per-site basis.
 
 * **[C. Theodoris](https://github.com/StrayLamb2)**
 * **[N. Alachiotis](https://github.com/alachins)**
-
-## References
-
-* [qLD: High-performance Computation of Linkage Disequilibrium on CPU and GPU](https://ieeexplore.ieee.org/document/9288130)
 
 ## License
 
