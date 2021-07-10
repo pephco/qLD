@@ -5,10 +5,6 @@ quickLD (qLD) is a tool to calculate Linkage disequilibrium (the non-random asso
 
 ## The main article behind quickLD:
 
-* [qLD: High-performance Computation of Linkage Disequilibrium on CPU and GPU](https://ieeexplore.ieee.org/document/9288130)
-
-Other related publications:
-
 * [quickLD: An efficient software for linkage disequilibrium analyses](https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13438)
 
 ## Getting Started
